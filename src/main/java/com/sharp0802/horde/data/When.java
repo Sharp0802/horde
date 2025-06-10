@@ -84,6 +84,30 @@ public abstract class When {
         }
     }
 
+    public static class Once extends When {
+        private final long _offset;
+
+        private Once(JsonObject e) throws Json.Exception {
+            var offsetMember = e.get("offset");
+            if (offsetMember == null) {
+                throw Json.missingField("once", "offset");
+            }
+
+            var offset = offsetMember.getAsString();
+            _offset = Tick.from(offset);
+        }
+
+        @Override
+        public boolean satisfy() {
+            return Time.getTick() == _offset;
+        }
+
+        @Override
+        public String toString() {
+            return "Once: " + Tick.toString(_offset);
+        }
+    }
+
     public static When from(JsonObject e) throws Json.Exception {
         var typeMember = e.get("type");
         if (typeMember == null) {
@@ -93,6 +117,7 @@ public abstract class When {
         var type = typeMember.getAsString();
         return switch (type) {
             case "cyclic" -> new Cyclic(e);
+            case "once" -> new Once(e);
             default -> throw Json.unrecognizedValue("when", "type", type);
         };
     }

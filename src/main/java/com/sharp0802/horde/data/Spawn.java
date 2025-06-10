@@ -97,6 +97,6 @@ public class Spawn {
 
     @Override
     public String toString() {
-        return _entity.toString() + " : " + _multiplier + "x @" + (_probability * 100) + "%, " + _number + " each";
+        return String.format("%s : %.1fx @%.1f%%, %.1f each", _entity.toString(), _multiplier, _probability, _number);
     }
 }

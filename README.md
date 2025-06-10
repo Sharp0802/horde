@@ -4,8 +4,9 @@ A library-first and intuitive forge mod to create horde wave.
 
 ## Runtime Command
 
-- `/horde reload` : Reload schedule data
+- `/horde reload` : Reloads schedule data
 - `/horde dump` : Dumps current schedule data
+- `/horde run <name>` : Force-run a specified schedule
 - `/horde tick` : Gets current tick count
 
 ## Configuration
@@ -99,6 +100,17 @@ When Object represents when schedule should be executed
 ```
 
 - `cycle` (Time String) : Cycle of signal
+- `offset` (Time String) : Offset of signal
+
+#### Once-When Object
+
+```json
+{
+  "type": "once",
+  "offset": ""
+}
+```
+
 - `offset` (Time String) : Offset of signal
 
 #### Example

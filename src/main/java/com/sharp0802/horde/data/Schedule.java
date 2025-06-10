@@ -68,6 +68,10 @@ public class Schedule {
         spawnList.toArray(_spawn);
     }
 
+    public String getName() {
+        return _name;
+    }
+
     public boolean satisfy() {
         return Arrays.stream(_whens).allMatch(When::satisfy);
     }

@@ -1,5 +1,6 @@
 package com.sharp0802.horde;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.logging.LogUtils;
 import com.sharp0802.horde.data.Config;
 import com.sharp0802.horde.data.Json;
@@ -16,7 +17,13 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
 @Mod(Horde.MODID)
 public class Horde {
@@ -53,12 +60,12 @@ public class Horde {
 
         var players = event.getServer().getPlayerList().getPlayers();
 
-        for (var schedule: Config.getSchedules()) {
+        for (var schedule : Config.getSchedules()) {
             if (!schedule.satisfy()) {
                 continue;
             }
 
-            for (var player: players) {
+            for (var player : players) {
                 schedule.run(player);
             }
         }
@@ -88,9 +95,42 @@ public class Horde {
                             for (var schedule : Config.getSchedules()) {
                                 builder.append(schedule);
                             }
-                            context.getSource().sendSuccess(() -> Component.literal(builder.toString()), false);
+                            var path = FMLPaths.GAMEDIR.get().resolve("horde.dump.txt");
+                            try {
+                                Files.writeString(path, builder.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+                                context.getSource().sendSuccess(() -> Component.literal("Data dumped at '" + path + "'"), false);
+                            } catch (IOException e) {
+                                context.getSource().sendFailure(Component.literal(e.toString()));
+                            }
                             return 1;
                         })
+                )
+                .then(Commands.literal("run")
+                        .then(Commands.argument("name", StringArgumentType.string())
+                                .requires(source -> source.hasPermission(2))
+                                .executes(context -> {
+                                    var name = StringArgumentType.getString(context, "name");
+
+                                    Schedule schedule = null;
+                                    for (var registered : Config.getSchedules()) {
+                                        if (registered.getName().equalsIgnoreCase(name)) {
+                                            schedule = registered;
+                                            break;
+                                        }
+                                    }
+                                    if (schedule == null) {
+                                        context.getSource().sendFailure(Component.literal("Schedule not found!"));
+                                        return 1;
+                                    }
+
+                                    var players = context.getSource().getServer().getPlayerList().getPlayers();
+                                    for (var player : players) {
+                                        schedule.run(player);
+                                    }
+
+                                    return 1;
+                                })
+                        )
                 )
                 .then(Commands.literal("tick")
                         .executes(context -> {
